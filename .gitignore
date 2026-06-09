@@ -1,0 +1,18 @@
+# Datos generados por la ingesta
+data/images/
+data/extractions/
+data/*.sqlite
+data/*.db
+
+# PDFs de prueba (no versionar binarios pesados)
+docs/*.pdf
+*.pt
+
+# Entorno
+.env
+__pycache__/
+*.pyc
+.chainlit/
+.venv/
+.claude/
+.files/

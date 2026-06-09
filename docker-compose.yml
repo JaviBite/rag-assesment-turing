@@ -1,0 +1,94 @@
+services:
+  # 1) Base de datos vectorial (modo servidor HTTP).
+  chroma:
+    image: chromadb/chroma:0.5.23
+    volumes:
+      - chroma-data:/chroma/chroma
+    environment:
+      - IS_PERSISTENT=TRUE
+      - ANONYMIZED_TELEMETRY=FALSE
+    ports:
+      - "8001:8000"   # opcional, para inspección desde el host
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/api/v2/heartbeat"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # 2) vLLM sirviendo Gemma 4 E2B (multimodal + tool-calling + razonamiento).
+  vllm:
+    image: vllm/vllm-openai:latest
+    command: >
+      --model ${MODEL_ID:-google/gemma-4-E2B-it-qat-w4a16-ct}
+      --served-model-name gemma
+      --tool-call-parser gemma4
+      --enable-auto-tool-choice
+      --reasoning-parser gemma4
+      --chat-template examples/tool_chat_template_gemma4.jinja
+      --max-model-len ${VLLM_MAX_LEN:-16384}
+      --gpu-memory-utilization ${VLLM_GPU_UTIL:-0.85}
+    environment:
+      - HUGGING_FACE_HUB_TOKEN=${HUGGING_FACE_HUB_TOKEN:-}
+    volumes:
+      - hf-cache:/root/.cache/huggingface
+    ports:
+      - "8000:8000"   # opcional, para llamar al LLM desde el host
+    ipc: host
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 30
+      start_period: 300s
+
+  # 3) Servicio local de detección de objetos (Apartado 3).
+  detector:
+    build: ./detector
+    environment:
+      - YOLO_MODEL=yolov8n.pt
+      - YOLO_CONF=0.25
+    ports:
+      - "8002:8000"   # accesible desde Postman/Python en el host
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  # 4) App: Chainlit (UI) + LangGraph (backend) + embeddings CPU + CLI de ingesta.
+  app:
+    build: ./app
+    environment:
+      - VLLM_BASE_URL=http://vllm:8000/v1
+      - VLLM_MODEL=gemma
+      - CHROMA_HOST=chroma
+      - CHROMA_PORT=8000
+      - DETECTOR_URL=http://detector:8000
+      - EMBEDDING_MODEL=BAAI/bge-m3
+      - SUMMARY_TOKEN_THRESHOLD=3000
+      - DOCS_DIR=/docs
+      - DATA_DIR=/data
+    volumes:
+      - ./docs:/docs
+      - ./data:/data
+      - hf-cache:/root/.cache/huggingface
+    ports:
+      - "8501:8501"   # Chainlit
+    depends_on:
+      chroma:
+        condition: service_healthy
+      vllm:
+        condition: service_healthy
+      detector:
+        condition: service_healthy
+
+volumes:
+  chroma-data:
+  hf-cache:

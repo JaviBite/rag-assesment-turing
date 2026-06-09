@@ -1,0 +1,35 @@
+# Frontend
+chainlit==2.11.1
+
+# Core LangChain / LangGraph
+langchain==0.3.13
+langchain-core==0.3.28
+langchain-openai==0.2.14
+langchain-huggingface==0.1.2
+langchain-chroma==0.1.4
+langchain-text-splitters==0.3.4
+langchain-experimental==0.3.4
+langgraph==0.2.60
+langgraph-checkpoint-sqlite==2.0.1
+
+# Vector DB
+chromadb==0.5.23
+
+# Embeddings (CPU, multilingüe)
+sentence-transformers==3.3.1
+
+# PDF processing
+pymupdf==1.25.1
+
+# Config y validación
+pydantic==2.13.4
+pydantic-settings==2.14.1
+
+# HTTP (tool detect_objects)
+requests==2.32.3
+
+# Imágenes
+pillow==11.0.0
+
+# Progreso
+tqdm>=4.66
