@@ -16,3 +16,5 @@ __pycache__/
 .venv/
 .claude/
 .files/
+data/checkpoints.sqlite-shm
+data/checkpoints.sqlite-wal

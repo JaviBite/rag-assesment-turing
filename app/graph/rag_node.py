@@ -48,7 +48,11 @@ def _build_system_and_images(state: GraphState) -> tuple[SystemMessage, list[str
         parts.append("\nCONTEXTO:\n" + "\n\n".join(ctx_parts))
 
     if state.get("image_path"):
-        parts.append("\nEl usuario ha adjuntado una imagen. Analízala visualmente si te lo pide.")
+        parts.append(
+            f"\nEl usuario ha adjuntado una imagen en: {state['image_path']}. "
+            "Analízala visualmente si te lo pide. "
+            "Si el usuario pregunta cuántas personas o coches hay, usa detect_objects con esa ruta."
+        )
 
     return SystemMessage(content="\n".join(parts)), image_paths
 
