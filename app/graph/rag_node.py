@@ -116,9 +116,23 @@ def rag_node(state: GraphState) -> dict:
 
 
 def chitchat_node(state: GraphState) -> dict:
-    system_parts = ["Eres un asistente conversacional amable. Responde en español."]
+    system_parts = [
+        "Eres un asistente conversacional amable. Responde en español. "
+        "Si el usuario adjunta una imagen, descríbela o analízala según lo que pida."
+    ]
     if state.get("summary"):
         system_parts.append(f"Resumen previo:\n{state['summary']}")
-    messages = [SystemMessage(content="\n".join(system_parts)), *state["messages"]]
+    system = SystemMessage(content="\n".join(system_parts))
+
+    messages = _inject_images_into_last_human(
+        [system, *state["messages"]],
+        user_image=state.get("image_path"),
+        rag_images=[],
+    )
+
     response = get_chat_model().invoke(messages)
-    return {"messages": [response], "retrieved_image_paths": []}
+
+    # Si el usuario adjuntó una imagen, queda "en contexto" para turnos
+    # siguientes (p.ej. para pedir detección de objetos sobre ella).
+    retrieved_images = [state["image_path"]] if state.get("image_path") else []
+    return {"messages": [response], "retrieved_image_paths": retrieved_images}

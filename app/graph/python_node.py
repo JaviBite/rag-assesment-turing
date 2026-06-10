@@ -46,4 +46,4 @@ def python_node(state: GraphState) -> dict:
         response = model.invoke(messages)
         new_messages.append(response)
 
-    return {"messages": new_messages}
+    return {"messages": new_messages, "retrieved_image_paths": []}

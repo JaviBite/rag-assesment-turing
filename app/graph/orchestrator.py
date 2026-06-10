@@ -17,10 +17,11 @@ ROUTER_SYSTEM = (
     "Eres un orquestador que clasifica la última petición del usuario en una de estas rutas:\n"
     "- 'detect': el usuario pide detectar o contar personas/coches en una imagen (la subida "
     "en este turno o una mostrada antes en la conversación).\n"
-    "- 'rag': preguntas sobre los documentos/base de conocimiento o sobre el contenido visual "
-    "de una imagen subida (que no sea contar personas/coches).\n"
+    "- 'rag': preguntas sobre los documentos/base de conocimiento indexados (aunque también "
+    "se adjunte una imagen para relacionarla con esos documentos).\n"
     "- 'python': el usuario pide cálculos, manipular datos, graficar o ejecutar código.\n"
-    "- 'chitchat': saludos o charla general que no necesita documentos ni código.\n"
+    "- 'chitchat': saludos, charla general, o pedir que se describa/analice una imagen "
+    "adjunta sin relación con los documentos.\n"
     "Devuelve solo la etiqueta de la ruta."
 )
 
@@ -70,9 +71,11 @@ def orchestrator_node(state: GraphState) -> dict:
         # Pidió detección pero no hay ninguna imagen disponible.
         route = "chitchat"
 
-    # Imagen subida en este turno sin petición de detección -> RAG (visión multimodal).
-    if state.get("image_path"):
-        return {"route": "rag"}
+    # Imagen subida en este turno y la petición no es sobre los documentos ->
+    # análisis visual directo (chitchat con la imagen inyectada), sin tocar el
+    # vectorstore.
+    if state.get("image_path") and route != "rag":
+        return {"route": "chitchat"}
 
     return {"route": route}
 
