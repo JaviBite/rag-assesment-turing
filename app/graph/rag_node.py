@@ -22,8 +22,8 @@ RAG_SYSTEM = (
 )
 
 
-def _build_system_and_images(state: GraphState) -> tuple[SystemMessage, list[str]]:
-    """Construye el system message con contexto RAG y devuelve las rutas de imágenes recuperadas."""
+def _build_system_and_images(state: GraphState) -> tuple[SystemMessage, list[str], list]:
+    """Construye el system message con contexto RAG y devuelve las rutas de imágenes y los docs recuperados."""
     parts = [RAG_SYSTEM]
     if state.get("summary"):
         parts.append(f"\nResumen de la conversación previa:\n{state['summary']}")
@@ -54,7 +54,25 @@ def _build_system_and_images(state: GraphState) -> tuple[SystemMessage, list[str
             "Si el usuario pregunta cuántas personas o coches hay, usa detect_objects con esa ruta."
         )
 
-    return SystemMessage(content="\n".join(parts)), image_paths
+    return SystemMessage(content="\n".join(parts)), image_paths, docs
+
+
+def _format_sources_footer(docs: list) -> str:
+    """Pie de "Fuentes:" a partir de los metadatos (documento + página) de los docs recuperados."""
+    if not docs:
+        return ""
+    sources: dict[str, list[str]] = {}
+    for d in docs:
+        meta = d.metadata
+        source = meta.get("source", "?")
+        label = f"p. {meta.get('page', '?')}"
+        if meta.get("type") == "image":
+            label += " (imagen)"
+        labels = sources.setdefault(source, [])
+        if label not in labels:
+            labels.append(label)
+    lines = (f"- {src}: {', '.join(labels)}" for src, labels in sources.items())
+    return "\n\n**Fuentes:**\n" + "\n".join(lines)
 
 
 def _inject_images_into_last_human(
@@ -83,7 +101,7 @@ def _inject_images_into_last_human(
 
 def rag_node(state: GraphState) -> dict:
     model = get_chat_model().bind_tools(TOOLS)
-    system, image_paths = _build_system_and_images(state)
+    system, image_paths, docs = _build_system_and_images(state)
     messages = _inject_images_into_last_human(
         [system, *state["messages"]],
         user_image=state.get("image_path"),
@@ -110,6 +128,10 @@ def rag_node(state: GraphState) -> dict:
                     image_paths.append(line[len(ANNOTATED_IMAGE_MARKER):].strip())
         response = model.invoke(messages)
         new_messages.append(response)
+
+    footer = _format_sources_footer(docs)
+    if footer and isinstance(response.content, str):
+        response.content += footer
 
     return {"messages": new_messages, "retrieved_image_paths": image_paths}
 

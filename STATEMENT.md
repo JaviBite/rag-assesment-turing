@@ -26,7 +26,7 @@ Crear un chatbot que tenga las siguientes funcionalidades:
   - [X] *(Bonus)* Que de alguno de los documentos se haga una extracción estructurada de su información (por ejemplo, un formulario con nombre, apellidos, fecha de nacimiento...). Esta extracción de información no tiene por qué guardarse en la base de datos vectorial.
 - [ ] Implementar una memoria dinámica que mantenga la conversación y que cuando esta pase de X tokens se resuma de forma automática.
 - [X] La implementación ha de estar basada en LangChain/LangGraph.
-- [ ] Si se detecta una pregunta que lo necesite, el modelo ha de ser capaz de implementar y ejecutar código Python.
+- [X] Si se detecta una pregunta que lo necesite, el modelo ha de ser capaz de implementar y ejecutar código Python.
 
 ---
 
@@ -49,7 +49,7 @@ El objetivo es disponer de un servicio que tenga como entrada una imagen y que c
 
 - [X] No hay necesidad de entrenar un modelo. Se pueden usar preentrenados.
 - [X] El servicio ha de estar conteinerizado. Es decir, una imagen Docker que al arrancar exponga el servicio.
-- [ ] La petición al servicio se puede hacer desde Postman o herramienta similar o desde código Python.
+- [X] La petición al servicio se puede hacer desde Postman o herramienta similar o desde código Python.
 - [X] La solución ha de estar implementada en Python.
 
 ### Extra teórico: entrenamiento de un modelo con nuevas categorías
