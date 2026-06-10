@@ -7,7 +7,7 @@ limitación conocida.
 """
 from __future__ import annotations
 
-from langchain_core.messages import SystemMessage, ToolMessage
+from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
 from langchain_experimental.tools import PythonREPLTool
 
 from ..llm import get_chat_model
@@ -19,10 +19,11 @@ TOOLS_BY_NAME = {t.name: t for t in TOOLS}
 
 PYTHON_SYSTEM = (
     "Eres un asistente que resuelve tareas escribiendo y ejecutando código Python. "
-    "Cuando necesites calcular algo, usa la herramienta de Python. "
+    "Cuando necesites calcular o programar algo, usa la herramienta de Python. "
     "Asegurate de usar siempre print() para mostrar el resultado en el mensaje final. "
-    "Siempre debes mostrar el resultado de la ejecución del código al usuario, incluso si es un error. "
-    "Tras ejecutar, explica el resultado al usuario en lenguaje natural y en español."
+    "El código ejecutado y su salida se mostrarán automáticamente al usuario antes "
+    "de tu respuesta: no los repitas ni los resumas, limítate a explicar el "
+    "resultado en lenguaje natural y en español."
 )
 
 
@@ -32,6 +33,7 @@ def python_node(state: GraphState) -> dict:
 
     response = model.invoke(messages)
     new_messages = [response]
+    executions: list[tuple[str, str]] = []
 
     for _ in range(3):
         if not getattr(response, "tool_calls", None):
@@ -39,11 +41,32 @@ def python_node(state: GraphState) -> dict:
         messages.append(response)
         for call in response.tool_calls:
             tool = TOOLS_BY_NAME[call["name"]]
+            code = str(call["args"].get("query", ""))
             result = tool.invoke(call["args"])
+            executions.append((code, str(result)))
             tool_msg = ToolMessage(content=str(result), tool_call_id=call["id"])
             messages.append(tool_msg)
             new_messages.append(tool_msg)
         response = model.invoke(messages)
         new_messages.append(response)
+
+    # El modelo (2B) a veces termina sin texto (content vacío, con o sin
+    # tool_calls pendientes) aunque el resultado ya esté en el ToolMessage
+    # anterior. Forzamos una respuesta final sin tools (no puede volver a
+    # llamar a la herramienta) para garantizar la explicación que pide
+    # PYTHON_SYSTEM.
+    if not str(new_messages[-1].content or "").strip():
+        new_messages[-1] = get_chat_model().invoke(messages)
+
+    # No confiamos en que el modelo (2B) transcriba fielmente el código y la
+    # salida en su respuesta final (tiende a parafrasearlos o truncarlos):
+    # los anteponemos de forma literal, ya que los tenemos disponibles.
+    if executions:
+        blocks = "\n\n".join(
+            f"```python\n{code}\n```\n**Salida:**\n```\n{output}\n```"
+            for code, output in executions
+        )
+        explanation = str(new_messages[-1].content or "").strip()
+        new_messages[-1] = AIMessage(content=f"{blocks}\n\n{explanation}".strip())
 
     return {"messages": new_messages, "retrieved_image_paths": []}

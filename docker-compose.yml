@@ -78,6 +78,7 @@ services:
     volumes:
       - ./docs:/docs
       - ./data:/data
+      - ./tests:/srv/app/tests
       - hf-cache:/root/.cache/huggingface
     ports:
       - "8501:8501"   # Chainlit

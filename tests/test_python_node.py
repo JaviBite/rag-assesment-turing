@@ -40,6 +40,8 @@ def test_factorial(graph) -> None:
     route = result.get("route", "?")
     _check(route == "python", f"ruta == 'python' (got '{route}')")
     last_content = result["messages"][-1].content
+    # Remove "." or "," from the result to avoid formatting issues (12! = 479,001,600 or 479.001.600)
+    last_content = last_content.replace(",", "").replace(".", "")
     # 12! = 479001600
     _check("479001600" in last_content, f"resultado contiene 479001600 (got: {last_content[:200]})")
     print(f"  respuesta: {last_content[:200]}...")

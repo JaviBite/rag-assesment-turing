@@ -12,19 +12,47 @@ from app.graph import build_graph
 
 GRAPH = build_graph()
 
+# Mensaje del starter de detección y la imagen de ejemplo que se adjunta
+# automáticamente cuando se usa (no es posible adjuntar ficheros a un starter
+# de Chainlit directamente).
+DETECTION_STARTER_MESSAGE = "Detecta las personas de esta imagen"
+DEFAULT_DETECTION_IMAGE = "sample_detection.jpg"
 
-@cl.on_chat_start
-async def on_chat_start() -> None:
-    # Un thread_id por sesión -> el checkpointer mantiene la memoria.
-    cl.user_session.set("thread_id", str(uuid.uuid4()))
-    await cl.Message(
-        content=(
-            "¡Hola! Soy tu asistente RAG. Puedes:\n"
-            "- Preguntarme sobre los documentos indexados 📄\n"
-            "- Subir una imagen para detectar personas y coches 🔍\n"
-            "- Pedirme cálculos o código Python 🐍"
-        )
-    ).send()
+
+@cl.set_starters
+async def set_starters() -> list[cl.Starter]:
+    return [
+        cl.Starter(
+            label="🐍 Python: Fibonacci",
+            message="Muéstrame los 100 primeros números de la secuencia Fibonacci",
+        ),
+        cl.Starter(
+            label="📄 RAG: población por países",
+            message="¿Cuánta población hay actualmente en diferentes países?",
+        ),
+        cl.Starter(
+            label="🖼️ RAG con imágenes: escudo",
+            message="Busca en tu base de conocimiento un escudo de armas",
+        ),
+        cl.Starter(
+            label="🔍 Detección de objetos",
+            message=DETECTION_STARTER_MESSAGE,
+        ),
+    ]
+
+
+# @cl.on_chat_start
+# async def on_chat_start() -> None:
+#     # Un thread_id por sesión -> el checkpointer mantiene la memoria.
+#     cl.user_session.set("thread_id", str(uuid.uuid4()))
+#     await cl.Message(
+#         content=(
+#             "¡Hola! Soy tu asistente RAG. Puedes:\n"
+#             "- Preguntarme sobre los documentos indexados 📄\n"
+#             "- Subir una imagen para detectar personas y coches 🔍\n"
+#             "- Pedirme cálculos o código Python 🐍"
+#         )
+#     ).send()
 
 
 def _save_uploaded_image(message: cl.Message) -> str | None:
@@ -52,6 +80,11 @@ def _save_uploaded_image(message: cl.Message) -> str | None:
 async def on_message(message: cl.Message) -> None:
     thread_id = cl.user_session.get("thread_id")
     image_path = _save_uploaded_image(message)
+
+    if image_path is None and message.content.strip() == DETECTION_STARTER_MESSAGE:
+        default_image = settings.images_dir / DEFAULT_DETECTION_IMAGE
+        if default_image.exists():
+            image_path = str(default_image)
 
     config = {"configurable": {"thread_id": thread_id}}
     inputs: dict = {
