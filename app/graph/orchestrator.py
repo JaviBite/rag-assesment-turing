@@ -15,23 +15,28 @@ from .state import GraphState
 
 ROUTER_SYSTEM = (
     "Eres un orquestador que clasifica la última petición del usuario en una de estas rutas:\n"
-    "- 'rag': preguntas sobre los documentos/base de conocimiento, sus imágenes, o detectar "
-    "objetos (personas/coches) en una imagen subida.\n"
+    "- 'detect': el usuario pide detectar o contar personas/coches en una imagen (la subida "
+    "en este turno o una mostrada antes en la conversación).\n"
+    "- 'rag': preguntas sobre los documentos/base de conocimiento o sobre el contenido visual "
+    "de una imagen subida (que no sea contar personas/coches).\n"
     "- 'python': el usuario pide cálculos, manipular datos, graficar o ejecutar código.\n"
     "- 'chitchat': saludos o charla general que no necesita documentos ni código.\n"
     "Devuelve solo la etiqueta de la ruta."
 )
 
+VALID_ROUTES = ("rag", "python", "chitchat", "detect")
+
 
 class Route(BaseModel):
-    route: Literal["rag", "python", "chitchat"] = Field(description="Ruta elegida")
+    route: Literal["rag", "python", "chitchat", "detect"] = Field(description="Ruta elegida")
+
+
+def _last_image_in_context(state: GraphState) -> str | None:
+    images = state.get("retrieved_image_paths") or []
+    return images[-1] if images else None
 
 
 def orchestrator_node(state: GraphState) -> dict:
-    # Si hay imagen subida en este turno, va directo a RAG (tiene el tool de detección).
-    if state.get("image_path"):
-        return {"route": "rag"}
-
     last_user = next(
         (m for m in reversed(state["messages"]) if isinstance(m, HumanMessage)),
         None,
@@ -49,14 +54,27 @@ def orchestrator_node(state: GraphState) -> dict:
 
     parsed = result["parsed"]
     if parsed is not None:
-        return {"route": parsed.route}
+        route = parsed.route
+    else:
+        # Fallback: el modelo (2B) a veces devuelve solo la etiqueta como texto
+        # plano en lugar de JSON, incumpliendo el response_format solicitado.
+        raw_text = str(result["raw"].content).strip().strip('"\'').lower()
+        route = raw_text if raw_text in VALID_ROUTES else "chitchat"
 
-    # Fallback: el modelo (2B) a veces devuelve solo la etiqueta como texto
-    # plano en lugar de JSON, incumpliendo el response_format solicitado.
-    raw_text = str(result["raw"].content).strip().strip('"\'').lower()
-    if raw_text in ("rag", "python", "chitchat"):
-        return {"route": raw_text}
-    return {"route": "chitchat"}
+    if route == "detect":
+        # Solo se enruta a detección si hay una imagen disponible: la subida en
+        # este turno o la última mostrada en el contexto de la conversación.
+        image_path = state.get("image_path") or _last_image_in_context(state)
+        if image_path:
+            return {"route": "detect", "detect_image_path": image_path}
+        # Pidió detección pero no hay ninguna imagen disponible.
+        route = "chitchat"
+
+    # Imagen subida en este turno sin petición de detección -> RAG (visión multimodal).
+    if state.get("image_path"):
+        return {"route": "rag"}
+
+    return {"route": route}
 
 
 def route_selector(state: GraphState) -> str:

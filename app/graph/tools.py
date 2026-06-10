@@ -6,13 +6,9 @@ import uuid
 from pathlib import Path
 
 import requests
-from langchain_core.tools import tool
 from PIL import Image, ImageDraw, ImageFont
 
 from ..config import settings
-
-# Marcador que rag_node busca en los ToolMessages para extraer la imagen anotada.
-ANNOTATED_IMAGE_MARKER = "ANNOTATED_IMAGE:"
 
 BOX_COLORS = {"person": (220, 60, 60), "car": (60, 140, 220)}
 BOX_WIDTH = 3
@@ -58,16 +54,16 @@ def _draw_detections(image_path: Path, detections: list[dict]) -> Path | None:
     return out_path
 
 
-@tool
-def detect_objects(image_path: str) -> str:
-    """Detecta personas y coches en una imagen y devuelve los conteos.
+def detect_objects_in_image(image_path: str) -> dict:
+    """Llama al servicio de detección y dibuja las cajas sobre la imagen original.
 
-    Úsala cuando el usuario haya subido una imagen y pregunte cuántas personas
-    o coches aparecen. ``image_path`` es la ruta local de la imagen subida.
+    Devuelve un dict con ``counts`` y ``detections`` (del servicio) y
+    ``annotated_path`` (ruta de la imagen con las cajas dibujadas, o None si no
+    hubo detecciones). Si la imagen no existe, devuelve ``{"error": ...}``.
     """
     path = Path(image_path)
     if not path.exists():
-        return f"No existe la imagen en {image_path}."
+        return {"error": f"No existe la imagen en {image_path}."}
 
     b64 = base64.b64encode(path.read_bytes()).decode("utf-8")
     resp = requests.post(
@@ -80,15 +76,6 @@ def detect_objects(image_path: str) -> str:
 
     counts = data.get("counts", {})
     detections = data.get("detections", [])
-    summary = (
-        f"Detecciones → personas: {counts.get('person', 0)}, "
-        f"coches: {counts.get('car', 0)}.\n"
-        f"Detalle: {detections}"
-    )
-
-    # Dibujar cajas con Pillow sobre la imagen original y añadir la ruta al mensaje.
     annotated_path = _draw_detections(path, detections)
-    if annotated_path:
-        summary += f"\n{ANNOTATED_IMAGE_MARKER}{annotated_path}"
 
-    return summary
+    return {"counts": counts, "detections": detections, "annotated_path": annotated_path}

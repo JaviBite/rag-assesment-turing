@@ -54,7 +54,9 @@ Abre <http://localhost:8501>. Puedes:
 ## Servicio de detección (Apartado 3) por separado
 
 El servicio es autónomo y se puede llamar desde Postman o Python.
-Se ha decidido integrarlo en el agente por añadirlo como herramienta externa y validar asi también su funcionamiento.
+Se ha decidido integrarlo además en el agente, como un nodo independiente del
+grafo (`detect`, ejecución estática sin pasar por el LLM) para validar también
+su funcionamiento end-to-end.
 
 ```bash
 # multipart (Postman: POST form-data, key "file" tipo File)
@@ -72,8 +74,26 @@ print(r.json())
 
 ## Arquitectura (resumen)
 
+```mermaid
+flowchart TD
+    Start([START]) --> Orchestrator
+    Orchestrator{{orchestrator<br/>routing por salida estructurada}}
+    Orchestrator -->|rag| RAG[rag]
+    Orchestrator -->|python| Python[python]
+    Orchestrator -->|chitchat| Chitchat[chitchat]
+    Orchestrator -->|detect| Detect[detect]
+    RAG --> Summarize
+    Python --> Summarize
+    Chitchat --> Summarize
+    Detect --> Summarize
+    Summarize[summarize] --> End([END])
+```
+
 - **Grafo LangGraph**: `orchestrator` (routing por salida estructurada) →
-  `rag` | `python` | `chitchat` → `summarize` → END.
+  `rag` | `python` | `chitchat` | `detect` → `summarize` → END.
+- **Detección de objetos**: nodo `detect` independiente y **estático (sin LLM)**.
+  Se enruta solo si se pide detectar/contar personas o coches y hay una imagen
+  disponible (subida en el chat o ya presente en el contexto de la conversación).
 - **RAG**: Chroma con una colección que mezcla texto e imágenes (descritas por el LLM),
   diferenciados por metadata.
 - **Memoria**: `SqliteSaver` persiste el estado por `thread_id`; un nodo propio resume

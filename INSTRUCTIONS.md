@@ -21,18 +21,25 @@ Prueba técnica (Turing Challenge) dockerizada en 4 servicios:
 `app/graph/build.py` ensambla:
 
 ```
-START → orchestrator → (rag | python | chitchat) → summarize → END
+START → orchestrator → (rag | python | chitchat | detect) → summarize → END
 ```
 
 - **`orchestrator.py`**: clasifica la última pregunta del usuario en `rag` /
-  `python` / `chitchat` con salida estructurada (`with_structured_output`).
+  `python` / `chitchat` / `detect` con salida estructurada (`with_structured_output`).
   Tiene un fallback para cuando el modelo (2B) devuelve la etiqueta como texto
-  plano en vez de JSON. Si hay `image_path` en el estado, va directo a `rag`.
+  plano en vez de JSON. La ruta `detect` solo se elige si además hay una imagen
+  disponible (subida en este turno vía `image_path`, o la última de
+  `retrieved_image_paths` como "imagen en contexto"); en ese caso fija
+  `detect_image_path`. Si hay `image_path` en el estado y no se pidió
+  detección, va a `rag`.
 - **`rag_node.py`**: recupera contexto de Chroma (`get_vectorstore().similarity_search`),
-  construye el system prompt con el contexto + resumen previo, inyecta imágenes
-  (subidas o recuperadas del RAG) en el último `HumanMessage` como contenido
-  multimodal, y tiene acceso al tool `detect_objects` (llama al servicio
-  `detector`). También expone `chitchat_node`.
+  construye el system prompt con el contexto + resumen previo, e inyecta
+  imágenes (subidas o recuperadas del RAG) en el último `HumanMessage` como
+  contenido multimodal. También expone `chitchat_node`.
+- **`detection_node.py`**: nodo de **ejecución estática (sin LLM)**. Llama
+  directamente a `tools.detect_objects_in_image` (servicio `detector`) sobre
+  `detect_image_path`, dibuja las cajas y devuelve un `AIMessage` con los
+  conteos ya formateados.
 - **`python_node.py`**: usa `PythonREPLTool` (langchain-experimental) con
   bucle de tool-calling acotado a 3 iteraciones. **Ejecuta código generado por
   el LLM dentro del contenedor de la app sin sandbox real** — limitación
@@ -42,7 +49,7 @@ START → orchestrator → (rag | python | chitchat) → summarize → END
   últimos `keep_last_messages` y emite `RemoveMessage` para purgarlos del
   estado persistido (`SqliteSaver`, en `data/checkpoints.sqlite`).
 - **`state.py`** (`GraphState`): `messages` (reducer `add_messages`), `summary`,
-  `route`, `image_path`, `retrieved_image_paths`.
+  `route`, `image_path`, `retrieved_image_paths`, `detect_image_path`.
 
 ## Estructura del repo
 

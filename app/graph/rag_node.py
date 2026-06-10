@@ -1,24 +1,18 @@
-"""Nodo conversacional/RAG con acceso al tool de detección de objetos."""
+"""Nodo conversacional/RAG."""
 from __future__ import annotations
 
 from pathlib import Path
 
-from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+from langchain_core.messages import HumanMessage, SystemMessage
 
 from ..llm import get_chat_model, image_data_uri
 from ..vectorstore import get_vectorstore
 from .state import GraphState
-from .tools import ANNOTATED_IMAGE_MARKER, detect_objects
-
-TOOLS = [detect_objects]
-TOOLS_BY_NAME = {t.name: t for t in TOOLS}
 
 RAG_SYSTEM = (
     "Eres un asistente que responde basándose en los documentos indexados. "
     "Usa el CONTEXTO recuperado para responder y cita la fuente (documento y página). "
-    "Si la respuesta no está en el contexto, dilo con claridad. "
-    "Si el usuario pregunta cuántas personas o coches hay en una imagen subida, "
-    "usa la herramienta detect_objects con la ruta de la imagen."
+    "Si la respuesta no está en el contexto, dilo con claridad."
 )
 
 
@@ -50,8 +44,7 @@ def _build_system_and_images(state: GraphState) -> tuple[SystemMessage, list[str
     if state.get("image_path"):
         parts.append(
             f"\nEl usuario ha adjuntado una imagen en: {state['image_path']}. "
-            "Analízala visualmente si te lo pide. "
-            "Si el usuario pregunta cuántas personas o coches hay, usa detect_objects con esa ruta."
+            "Analízala visualmente si te lo pide."
         )
 
     return SystemMessage(content="\n".join(parts)), image_paths, docs
@@ -100,7 +93,6 @@ def _inject_images_into_last_human(
 
 
 def rag_node(state: GraphState) -> dict:
-    model = get_chat_model().bind_tools(TOOLS)
     system, image_paths, docs = _build_system_and_images(state)
     messages = _inject_images_into_last_human(
         [system, *state["messages"]],
@@ -108,32 +100,19 @@ def rag_node(state: GraphState) -> dict:
         rag_images=image_paths,
     )
 
-    response = model.invoke(messages)
-    new_messages = [response]
-
-    # Bucle de tool-calling (máximo 3 iteraciones para acotar el coste).
-    for _ in range(3):
-        if not getattr(response, "tool_calls", None):
-            break
-        messages.append(response)
-        for call in response.tool_calls:
-            tool = TOOLS_BY_NAME[call["name"]]
-            result = tool.invoke(call["args"])
-            tool_msg = ToolMessage(content=str(result), tool_call_id=call["id"])
-            messages.append(tool_msg)
-            new_messages.append(tool_msg)
-            # Extraer ruta de imagen anotada si el tool la incluyó.
-            for line in str(result).splitlines():
-                if line.startswith(ANNOTATED_IMAGE_MARKER):
-                    image_paths.append(line[len(ANNOTATED_IMAGE_MARKER):].strip())
-        response = model.invoke(messages)
-        new_messages.append(response)
+    response = get_chat_model().invoke(messages)
 
     footer = _format_sources_footer(docs)
     if footer and isinstance(response.content, str):
         response.content += footer
 
-    return {"messages": new_messages, "retrieved_image_paths": image_paths}
+    # Si el usuario adjuntó una imagen, queda "en contexto" para turnos siguientes
+    # (p.ej. para pedir detección de objetos sobre ella sin volver a subirla).
+    retrieved_images = list(image_paths)
+    if state.get("image_path"):
+        retrieved_images.append(state["image_path"])
+
+    return {"messages": [response], "retrieved_image_paths": retrieved_images}
 
 
 def chitchat_node(state: GraphState) -> dict:
