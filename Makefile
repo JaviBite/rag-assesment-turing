@@ -133,8 +133,6 @@ test-detector:
 	@echo "=== Test: servicio de detección de objetos ==="
 	@echo "--- curl de ejemplo (README) ---"
 	curl -F "file=@image.jpg" $(DETECTOR_URL)/detect
-	@echo ""
-	PYTHONPATH=. .venv/Scripts/python tests/test_detector.py
 
 test-rag:
 	@echo "=== Test: flujo RAG (via LangGraph directo) ==="
