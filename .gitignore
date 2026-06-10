@@ -17,3 +17,5 @@ __pycache__/
 .claude/
 .files/
 ollama/Modelfile
+data/checkpoints.sqlite-shm
+data/checkpoints.sqlite-wal

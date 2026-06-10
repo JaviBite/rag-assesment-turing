@@ -65,7 +65,11 @@ def ingest_pdf(pdf_path: Path, store, splitter: SemanticChunker) -> None:
     tqdm.write(f"  imágenes: {n_img} descripciones indexadas")
 
     first_page = render_first_page(pdf_path, settings.images_dir)
-    form_json = process_form(pdf_path.stem, first_page)
+    try:
+        form_json = process_form(pdf_path.stem, first_page)
+    except Exception as exc:  # noqa: BLE001 - un fallo del LLM no debe parar la ingesta
+        tqdm.write(f"  ! No se pudo analizar el formulario: {exc}")
+        return
     if form_json:
         tqdm.write(f"  formulario detectado -> {form_json}")
     else:

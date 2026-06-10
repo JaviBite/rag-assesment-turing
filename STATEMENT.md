@@ -20,12 +20,12 @@ El reto estará compuesto de 3 apartados: un apartado **técnico**, un apartado 
 
 Crear un chatbot que tenga las siguientes funcionalidades:
 
-- [ ] Una interfaz, por ejemplo la interfaz de chatbot de Gradio.
+- [X] Una interfaz, por ejemplo la interfaz de chatbot de Gradio.
 - [ ] Ingestar varios documentos PDF largos para usarlos como base de conocimiento de un RAG. Se ha de usar una base de datos vectorial a elección.
-  - [ ] *(Bonus)* Que alguno de los documentos contenga imágenes y éstas sean indexadas para poder preguntar por ellas.
-  - [ ] *(Bonus)* Que de alguno de los documentos se haga una extracción estructurada de su información (por ejemplo, un formulario con nombre, apellidos, fecha de nacimiento...). Esta extracción de información no tiene por qué guardarse en la base de datos vectorial.
+  - [X] *(Bonus)* Que alguno de los documentos contenga imágenes y éstas sean indexadas para poder preguntar por ellas.
+  - [X] *(Bonus)* Que de alguno de los documentos se haga una extracción estructurada de su información (por ejemplo, un formulario con nombre, apellidos, fecha de nacimiento...). Esta extracción de información no tiene por qué guardarse en la base de datos vectorial.
 - [ ] Implementar una memoria dinámica que mantenga la conversación y que cuando esta pase de X tokens se resuma de forma automática.
-- [ ] La implementación ha de estar basada en LangChain/LangGraph.
+- [X] La implementación ha de estar basada en LangChain/LangGraph.
 - [ ] Si se detecta una pregunta que lo necesite, el modelo ha de ser capaz de implementar y ejecutar código Python.
 
 ---
@@ -47,16 +47,16 @@ Dar respuesta a los siguientes puntos de forma teórica, sin necesidad de desarr
 
 El objetivo es disponer de un servicio que tenga como entrada una imagen y que como salida proporcione un JSON con detecciones de coches y personas. Se han de cumplir los siguientes puntos:
 
-- [ ] No hay necesidad de entrenar un modelo. Se pueden usar preentrenados.
-- [ ] El servicio ha de estar conteinerizado. Es decir, una imagen Docker que al arrancar exponga el servicio.
+- [X] No hay necesidad de entrenar un modelo. Se pueden usar preentrenados.
+- [X] El servicio ha de estar conteinerizado. Es decir, una imagen Docker que al arrancar exponga el servicio.
 - [ ] La petición al servicio se puede hacer desde Postman o herramienta similar o desde código Python.
-- [ ] La solución ha de estar implementada en Python.
+- [X] La solución ha de estar implementada en Python.
 
 ### Extra teórico: entrenamiento de un modelo con nuevas categorías
 
 Además, plantear cuáles serían los pasos necesarios para entrenar un modelo de detección con categorías no existentes en los modelos preentrenados. Los puntos en los que centrar la explicación son:
 
-- [ ] Pasos necesarios a seguir.
-- [ ] Descripción de posibles problemas que puedan surgir y medidas para reducir el riesgo.
-- [ ] Estimación de cantidad de datos necesarios así como de los resultados/métricas esperadas.
-- [ ] Enumeración y pequeña descripción (2-3 frases) de técnicas que se pueden utilizar para mejorar el desempeño: las métricas del modelo en tiempo de entrenamiento y las métricas del modelo en tiempo de inferencia.
+- Pasos necesarios a seguir.
+- Descripción de posibles problemas que puedan surgir y medidas para reducir el riesgo.
+- Estimación de cantidad de datos necesarios así como de los resultados/métricas esperadas.
+- Enumeración y pequeña descripción (2-3 frases) de técnicas que se pueden utilizar para mejorar el desempeño: las métricas del modelo en tiempo de entrenamiento y las métricas del modelo en tiempo de inferencia.
