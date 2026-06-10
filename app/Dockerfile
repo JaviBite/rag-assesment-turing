@@ -13,6 +13,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . /srv/app
 
 ENV PYTHONUNBUFFERED=1
+# /srv en el path para que `from app.xxx import yyy` resuelva el paquete /srv/app.
+ENV PYTHONPATH=/srv
 
 EXPOSE 8501
 # Chainlit sirve la UI; la ingesta se lanza con `docker compose run`.

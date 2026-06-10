@@ -39,12 +39,24 @@ def orchestrator_node(state: GraphState) -> dict:
     if last_user is None:
         return {"route": "chitchat"}
 
-    model = get_chat_model(temperature=0.0).with_structured_output(Route)
+    model = get_chat_model(temperature=0.0).with_structured_output(
+        Route, method="json_schema", include_raw=True
+    )
     result = model.invoke([
         SystemMessage(content=ROUTER_SYSTEM),
         HumanMessage(content=str(last_user.content)),
     ])
-    return {"route": result.route}
+
+    parsed = result["parsed"]
+    if parsed is not None:
+        return {"route": parsed.route}
+
+    # Fallback: el modelo (2B) a veces devuelve solo la etiqueta como texto
+    # plano en lugar de JSON, incumpliendo el response_format solicitado.
+    raw_text = str(result["raw"].content).strip().strip('"\'').lower()
+    if raw_text in ("rag", "python", "chitchat"):
+        return {"route": raw_text}
+    return {"route": "chitchat"}
 
 
 def route_selector(state: GraphState) -> str:

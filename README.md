@@ -1,6 +1,7 @@
 # Chatbot RAG multimodal + servicio de detección de objetos
 
 Prueba técnica. Solución **dockerizada** con 4 contenedores:
+Se ha decidido utilizar 4 contenedores por simular un entorno real con diferentes servicios.
 
 | Servicio   | Rol                                                                 | Puerto host |
 |------------|---------------------------------------------------------------------|-------------|
@@ -53,16 +54,17 @@ Abre <http://localhost:8501>. Puedes:
 ## Servicio de detección (Apartado 3) por separado
 
 El servicio es autónomo y se puede llamar desde Postman o Python.
+Se ha decidido integrarlo en el agente por añadirlo como herramienta externa y validar asi también su funcionamiento.
 
 ```bash
 # multipart (Postman: POST form-data, key "file" tipo File)
-curl -F "file=@calle.jpg" http://localhost:8002/detect
+curl -F "file=@image.jpg" http://localhost:8002/detect
 ```
 
 ```python
 import requests
 r = requests.post("http://localhost:8002/detect",
-                  files={"file": open("calle.jpg", "rb")})
+                  files={"file": open("image.jpg", "rb")})
 print(r.json())
 # {"detections": [{"label": "car", "confidence": 0.94, "box": [...]}, ...],
 #  "counts": {"car": 1, "person": 0}}

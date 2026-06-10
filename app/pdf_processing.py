@@ -39,13 +39,14 @@ def extract_images(pdf_path: Path, out_dir: Path) -> list[ExtractedImage]:
     stem = pdf_path.stem
     with fitz.open(pdf_path) as doc:
         for page_index in range(len(doc)):
-            for img_index, img in enumerate(doc.get_page_images(page_index, full=False)):
+            for img_index, img in enumerate(doc.get_page_images(page_index, full=True)):
                 xref = img[0]
                 pix = fitz.Pixmap(doc, xref)
                 if pix.width < MIN_IMAGE_SIDE or pix.height < MIN_IMAGE_SIDE:
                     pix = None
                     continue
-                if pix.n - pix.alpha >= 4:  # CMYK u otros -> a RGB
+                if pix.colorspace is None or pix.colorspace.name not in ("DeviceGray", "DeviceRGB"):
+                    # CMYK, Indexed, Lab, máscaras de imagen, etc. -> a RGB para poder guardar como PNG
                     pix = fitz.Pixmap(fitz.csRGB, pix)
                 out_path = out_dir / f"{stem}_p{page_index + 1}_{img_index}.png"
                 pix.save(out_path)

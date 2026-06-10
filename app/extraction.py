@@ -27,12 +27,18 @@ class FormField(BaseModel):
 
 class FormExtraction(BaseModel):
     form_type: str = Field(description="Tipo de formulario (p.ej. 'inscripción', 'solicitud')")
-    fields: list[FormField] = Field(description="Lista de campos detectados con su valor")
+    nombre: str | None = Field(default=None, description="Valor del campo 'nombre', o null si vacío")
+    apellidos: str | None = Field(default=None, description="Valor del campo 'apellidos', o null si vacío")
+    fecha_nacimiento: str | None = Field(default=None, description="Valor del campo 'fecha de nacimiento', o null si vacío")
+    fecha: str | None = Field(default=None, description="Valor del campo 'fecha', o null si vacío")
+    lugar: str | None = Field(default=None, description="Valor del campo 'lugar', o null si vacío")
+    dni: str | None = Field(default=None, description="Valor del campo 'DNI' o 'NIF', o null si vacío")                                  
+    extra: list[FormField] = Field(description="Lista de campos extra relevantes detectados con su valor")
 
 
 def is_form(image_path: str | Path) -> bool:
     """Pregunta binaria a Gemma sobre si la imagen es un formulario."""
-    model = get_chat_model(temperature=0.0).with_structured_output(_IsForm)
+    model = get_chat_model(temperature=0.0).with_structured_output(_IsForm, method="json_schema")
     message = HumanMessage(
         content=[
             {
@@ -50,7 +56,7 @@ def is_form(image_path: str | Path) -> bool:
 
 def extract_form(image_path: str | Path) -> FormExtraction:
     """Extracción estructurada de los campos del formulario."""
-    model = get_chat_model(temperature=0.0).with_structured_output(FormExtraction)
+    model = get_chat_model(temperature=0.0).with_structured_output(FormExtraction, method="json_schema")
     message = HumanMessage(
         content=[
             {
