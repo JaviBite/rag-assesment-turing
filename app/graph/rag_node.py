@@ -13,7 +13,7 @@ from .state import GraphState
 RAG_SYSTEM = (
     "Eres un asistente que responde basándose en los documentos indexados. "
     "Usa el CONTEXTO recuperado para responder y cita la fuente (documento y página). "
-    "Si la respuesta no está en el contexto, dilo con claridad."
+    "Si la respuesta no está en el contexto, DEBES decirlo con claridad y no invetar o añadir nada más."
 )
 
 
@@ -120,6 +120,7 @@ def chitchat_node(state: GraphState) -> dict:
     system_parts = [
         "Eres un asistente conversacional amable. Responde en español. "
         "Si el usuario adjunta una imagen, descríbela o analízala según lo que pida."
+        "Si te pregunta el usuario, tus capacidades son: consultar documentos, hacer cálculos en Python, detectar objetos en imágenes, y chatear sobre cualquier tema."
     ]
     if state.get("summary"):
         system_parts.append(f"Resumen previo:\n{state['summary']}")

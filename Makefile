@@ -6,7 +6,7 @@
 SHELL := bash
 
 .PHONY: help build up down logs ingest ingest-reset \
-        test-detector test-rag test-python test-memory test-all \
+        test-detector test-rag test-python test-memory test-all eval eval-local \
         status clean \
         check-ollama up-mac down-mac logs-mac status-mac \
         ingest-mac ingest-reset-mac clean-mac \
@@ -39,6 +39,7 @@ help:
 	@echo "  test-python        Prueba la generación + ejecución de Python"
 	@echo "  test-memory        Prueba el resumen automático de conversación"
 	@echo "  test-all           Lanza todos los tests en secuencia"
+	@echo "  eval               Evalúa el chatbot con el golden set (métricas + LLM-as-judge)"
 	@echo ""
 	@echo "  clean              Elimina contenedores, volúmenes y caché de HF"
 	@echo ""
@@ -154,6 +155,10 @@ test-memory:
 test-all: test-detector test-rag test-python test-memory
 	@echo "=== Todos los tests completados ==="
 
+eval:
+	@echo "=== Evaluación: golden set (métricas + LLM-as-judge) ==="
+	docker compose run --rm app python /srv/app/tests/eval.py $(ARGS)
+
 # ─── Desarrollo local (sin Docker) ──────────────────────────────────────────
 #
 # Requiere: .venv con app/requirements.txt instalado
@@ -199,6 +204,11 @@ ingest-local:
 
 ingest-local-reset:
 	$(MAKE) ingest-local ARGS=--reset
+
+# ── eval-local ───────────────────────────────────────────────────────────────
+eval-local:
+	@echo "Evaluando con el golden set (servicios en localhost)..."
+	.venv/Scripts/python tests/eval.py $(ARGS)
 
 # ── stop-local ───────────────────────────────────────────────────────────────
 stop-local:

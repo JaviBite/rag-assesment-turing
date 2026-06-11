@@ -1,0 +1,70 @@
+[
+  {
+    "id": "python-fibonacci",
+    "descripcion": "El cálculo se enruta a Python y se ejecuta de verdad.",
+    "turns": ["Muéstrame los 100 primeros números de la secuencia Fibonacci"],
+    "expected_route": "python",
+    "expect_any": ["6765", "832040", "102334155"],
+    "judge": "La respuesta muestra la secuencia de Fibonacci calculada con código Python ejecutado, no inventada."
+  },
+  {
+    "id": "python-estadistica",
+    "descripcion": "Manipulación de datos numéricos vía Python.",
+    "turns": ["Calcula la media y la desviación estándar de la lista [4, 8, 15, 16, 23, 42]"],
+    "expected_route": "python",
+    "expect_any": ["18"],
+    "judge": "La media reportada es 18 (o 18.0) y se obtiene ejecutando código, no a ojo."
+  },
+  {
+    "id": "rag-poblacion",
+    "descripcion": "Consulta de conocimiento sobre los documentos indexados.",
+    "turns": ["¿Cuánta población hay actualmente en diferentes países?"],
+    "expected_route": "rag",
+    "judge": "La respuesta se apoya en el CONTEXTO recuperado de los documentos y cita la fuente (documento y página), o indica con claridad si el dato no está. No inventa cifras sin respaldo."
+  },
+  {
+    "id": "rag-imagenes-planetas",
+    "descripcion": "RAG multimodal: recupera imágenes indexadas (bonus del Apartado 1).",
+    "turns": ["Busca en tu base de conocimiento imágenes de la luna o de planetas"],
+    "expected_route": "rag",
+    "expect_images": true,
+    "judge": "La respuesta describe imágenes recuperadas de la base de conocimiento relacionadas con la luna o los planetas."
+  },
+  {
+    "id": "rag-fuera-de-alcance",
+    "descripcion": "Fidelidad / anti-alucinación: lo que no está en los documentos.",
+    "turns": ["¿Cuál es la receta tradicional de la paella valenciana?"],
+    "expected_route": "rag",
+    "expect_any": [
+      "no se encuentra", "no está en", "no aparece", "no figura", "no consta",
+      "no dispongo", "no hay información", "no se menciona", "no contienen"
+    ],
+    "judge": "El asistente indica que esa información NO está en los documentos indexados, en lugar de inventarse una receta. Se penaliza alucinar contenido no recuperado."
+  },
+  {
+    "id": "detect-personas-coches",
+    "descripcion": "Detección de objetos (Apartado 3) integrada como nodo del grafo.",
+    "turns": ["Detecta las personas y los coches de esta imagen"],
+    "image": "auto",
+    "expected_route": "detect",
+    "expect_any": ["persona", "coche", "car", "detec"],
+    "judge": "La respuesta reporta el conteo de personas y/o coches detectados en la imagen."
+  },
+  {
+    "id": "chitchat-saludo",
+    "descripcion": "Charla general / presentación de capacidades.",
+    "turns": ["Hola, ¿qué cosas puedes hacer?"],
+    "expected_route": "chitchat",
+    "judge": "Responde de forma amable y describe sus capacidades (consultar documentos, hacer cálculos en Python, detectar objetos en imágenes)."
+  },
+  {
+    "id": "memoria-multivuelta",
+    "descripcion": "Memoria conversacional: recuerda datos de un turno anterior.",
+    "turns": [
+      "Me llamo Javier y mi color favorito es el verde. Solo confírmalo.",
+      "¿Cómo me llamo y cuál es mi color favorito?"
+    ],
+    "expect_any": ["javier"],
+    "judge": "Recuerda correctamente el nombre (Javier) y el color favorito (verde) mencionados en el primer turno."
+  }
+]

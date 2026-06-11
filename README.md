@@ -97,10 +97,38 @@ flowchart TD
   Se enruta solo si se pide detectar/contar personas o coches y hay una imagen
   disponible (subida en el chat o ya presente en el contexto de la conversación).
 - **RAG**: Chroma con una colección que mezcla texto e imágenes (descritas por el LLM),
-  diferenciados por metadata.
+  diferenciados por metadata. El **chunking es semántico** (no por número fijo de
+  caracteres): el enunciado recalca que los PDFs son largos, y trocear por
+  unidades de significado mantiene mejor el contexto en la indexación y la
+  recuperación. El retrieval usa `k=4` para no introducir ruido, dado que **no
+  hay reranker** (queda fuera del alcance de la prueba, pero sería la mejora
+  natural: recuperar más candidatos y reordenarlos con un cross-encoder).
 - **Memoria**: `SqliteSaver` persiste el estado por `thread_id`; un nodo propio resume
   al superar el umbral de tokens.
 - **Embeddings**: `BAAI/bge-m3` en CPU (multilingüe).
+
+## Evaluación
+
+Más allá de los tests de integración (`make test-all`), hay un mini-arnés de
+evaluación de calidad sobre un **golden set** (`tests/golden_set.json`, 8 casos
+alineados con los Starters de la UI):
+
+```bash
+make eval                       # métricas + LLM-as-judge
+make eval ARGS=--no-judge       # solo checks deterministas (más rápido)
+```
+
+Por cada caso mide: acierto de **enrutado** del orquestador, **recuperación de
+imágenes** cuando aplica, presencia de **palabras clave** en la respuesta
+(cálculos, datos recordados…), **calidad** vía LLM-as-judge (fidelidad y
+relevancia) y **latencia**. Al final imprime un resumen agregado (accuracy de
+routing, tasa de aciertos del juez, latencia media). El golden set incluye un
+caso de *fuera de alcance* (preguntar por algo que no está en los documentos)
+para vigilar la fidelidad / anti-alucinación del RAG.
+
+> El juez usa el mismo modelo 2B, así que es un evaluador débil; en un caso real
+> se delegaría en un modelo superior o en un framework como RAGAS. Sirve aquí
+> como esqueleto del *loop* de evaluación.
 
 ## Limitaciones conocidas
 
