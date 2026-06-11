@@ -21,10 +21,10 @@ El reto estará compuesto de 3 apartados: un apartado **técnico**, un apartado 
 Crear un chatbot que tenga las siguientes funcionalidades:
 
 - [X] Una interfaz, por ejemplo la interfaz de chatbot de Gradio.
-- [ ] Ingestar varios documentos PDF largos para usarlos como base de conocimiento de un RAG. Se ha de usar una base de datos vectorial a elección.
+- [X] Ingestar varios documentos PDF largos para usarlos como base de conocimiento de un RAG. Se ha de usar una base de datos vectorial a elección.
   - [X] *(Bonus)* Que alguno de los documentos contenga imágenes y éstas sean indexadas para poder preguntar por ellas.
   - [X] *(Bonus)* Que de alguno de los documentos se haga una extracción estructurada de su información (por ejemplo, un formulario con nombre, apellidos, fecha de nacimiento...). Esta extracción de información no tiene por qué guardarse en la base de datos vectorial.
-- [ ] Implementar una memoria dinámica que mantenga la conversación y que cuando esta pase de X tokens se resuma de forma automática.
+- [X] Implementar una memoria dinámica que mantenga la conversación y que cuando esta pase de X tokens se resuma de forma automática.
 - [X] La implementación ha de estar basada en LangChain/LangGraph.
 - [X] Si se detecta una pregunta que lo necesite, el modelo ha de ser capaz de implementar y ejecutar código Python.
 

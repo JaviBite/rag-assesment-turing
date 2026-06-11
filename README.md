@@ -102,6 +102,9 @@ flowchart TD
 
 ## Limitaciones conocidas
 
-- El nodo de Python ejecuta código generado por el LLM dentro del contenedor; en
-  producción requeriría un sandbox real (gVisor, contenedor efímero, etc.).
+- El nodo de Python ejecuta código generado por el LLM dentro del contenedor.
+  Tiene una guarda ligera (`app/graph/python_guard.py`): timeout de 10s y
+  bloqueo de imports de sistema/red (`os`, `subprocess`, `socket`, etc.), pero
+  no es un sandbox real; en producción requeriría uno (gVisor, contenedor
+  efímero, etc.).
 - `yolov8n` corre en CPU por defecto para dejar la VRAM a vLLM (configurable a GPU).

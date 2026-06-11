@@ -1,19 +1,20 @@
 """Nodo que genera y ejecuta código Python para resolver la petición.
 
-ATENCIÓN: ejecuta código generado por el LLM. Se ejecuta aislado dentro del
-contenedor de la app; no exponer el servicio a usuarios no confiables sin un
-sandbox real (firejail, gVisor, contenedor efímero, etc.). Documentado como
-limitación conocida.
+ATENCIÓN: ejecuta código generado por el LLM. Se ejecuta dentro del
+contenedor de la app con una guarda ligera (timeout + bloqueo de imports
+de sistema/red, ver ``python_guard.py``), pero no es un sandbox real; no
+exponer el servicio a usuarios no confiables sin uno (firejail, gVisor,
+contenedor efímero, etc.). Documentado como limitación conocida.
 """
 from __future__ import annotations
 
 from langchain_core.messages import AIMessage, SystemMessage, ToolMessage
-from langchain_experimental.tools import PythonREPLTool
 
 from ..llm import get_chat_model
+from .python_guard import GuardedPythonREPLTool
 from .state import GraphState
 
-python_tool = PythonREPLTool()
+python_tool = GuardedPythonREPLTool()
 TOOLS = [python_tool]
 TOOLS_BY_NAME = {t.name: t for t in TOOLS}
 
