@@ -79,6 +79,7 @@ services:
       - ./docs:/docs
       - ./data:/data
       - ./tests:/srv/app/tests
+      - ./chainlit.md:/srv/chainlit.md:ro
       - hf-cache:/root/.cache/huggingface
     ports:
       - "8501:8501"   # Chainlit

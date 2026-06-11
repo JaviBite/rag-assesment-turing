@@ -1,17 +1,15 @@
-# Welcome to Chainlit! 🚀🤖
+# 🤖 Chatbot RAG multimodal + detección de objetos
 
-Hi there, Developer! 👋 We're excited to have you on board. Chainlit is a powerful tool designed to help you prototype, debug and share applications built on top of LLMs.
+Asistente de la prueba técnica. Combina varias capacidades sobre un grafo de
+**LangGraph**, con **Gemma** servido vía **vLLM** y **Chroma** como base vectorial:
 
-## Useful Links 🔗
-
-- **Documentation:** Get started with our comprehensive [Chainlit Documentation](https://docs.chainlit.io) 📚
-- **Discord Community:** Join our friendly [Chainlit Discord](https://discord.gg/k73SQ3FyUh) to ask questions, share your projects, and connect with other developers! 💬
-
-We can't wait to see what you create with Chainlit! Happy coding! 💻😊
-
-## Welcome screen
-
-To modify the welcome screen, edit the `chainlit.md` file at the root of your project. If you do not want a welcome screen, just leave this file empty.
+- **RAG multimodal** sobre los PDFs ingestados en `docs/` (texto + imágenes
+  descritas por el modelo), con cita de la fuente.
+- **Generación y ejecución de código Python** para cálculos, tablas y gráficas.
+- **Detección de objetos (YOLO)**: cuenta o localiza personas y coches en
+  imágenes que subas al chat.
+- **Memoria de conversación**: se resume automáticamente al superar el umbral
+  de tokens configurado.
 
 ## Ejemplos para probar el sistema 🧪
 
@@ -29,4 +27,5 @@ Prueba estas preguntas para ver las distintas capacidades del asistente:
 ### 🔍 Detección de objetos
 > Detecta las personas de esta imagen
 
-*(Sube primero una imagen con personas o coches y, en el mismo mensaje o en uno siguiente, pide la detección)*
+*(Sube primero una imagen con personas o coches y, en el mismo mensaje o en uno
+siguiente, pide la detección)*
