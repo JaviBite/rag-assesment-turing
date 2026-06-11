@@ -11,6 +11,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from pydantic import BaseModel, Field
 
 from ..llm import get_chat_model
+from .image_refs import select_referenced_image
 from .state import GraphState
 
 ROUTER_SYSTEM = (
@@ -20,7 +21,8 @@ ROUTER_SYSTEM = (
     "- 'rag': preguntas sobre los documentos/imagenes/base de conocimiento indexados.\n"
     "- 'python': el usuario pide cálculos o problemas matemáticos, manipular datos, ejecutar o programar código.\n"
     "- 'chitchat': saludos, charla general, o pedir que se describa/analice una imagen "
-    "adjunta sin relación con los documentos.\n"
+    "(adjunta en este turno o ya mostrada antes en la conversación, p.ej. 'la segunda "
+    "imagen', 'esa foto', 'la última imagen') sin pedir nueva información de los documentos.\n"
     "Devuelve solo la etiqueta de la ruta."
 )
 
@@ -75,6 +77,16 @@ def orchestrator_node(state: GraphState) -> dict:
     # vectorstore.
     if state.get("image_path") and route != "rag":
         return {"route": "chitchat"}
+
+    # El router (2B) suele confundir "describe/analiza la imagen X" con una
+    # nueva consulta RAG, porque su propio prompt menciona "imágenes...
+    # indexadas". Si no hay imagen nueva pero el mensaje referencia una de
+    # las imágenes ya mostradas en el turno anterior, forzar 'chitchat' para
+    # describirla sin volver a recuperar documentos.
+    if route == "rag" and not state.get("image_path"):
+        prev_images = state.get("retrieved_image_paths") or []
+        if select_referenced_image(str(last_user.content), prev_images):
+            return {"route": "chitchat"}
 
     return {"route": route}
 

@@ -7,6 +7,7 @@ from langchain_core.messages import HumanMessage, SystemMessage
 
 from ..llm import get_chat_model, image_data_uri
 from ..vectorstore import get_vectorstore
+from .image_refs import select_referenced_image
 from .state import GraphState
 
 RAG_SYSTEM = (
@@ -124,15 +125,33 @@ def chitchat_node(state: GraphState) -> dict:
         system_parts.append(f"Resumen previo:\n{state['summary']}")
     system = SystemMessage(content="\n".join(system_parts))
 
+    # Si no hay imagen nueva pero el usuario referencia una de las imágenes
+    # mostradas en el turno anterior (p.ej. "describe la segunda imagen"),
+    # seleccionarla para inyectarla como contenido visual.
+    referenced_image: str | None = None
+    if not state.get("image_path"):
+        last_human = next(
+            (m for m in reversed(state["messages"]) if m.type == "human"), None
+        )
+        text = str(last_human.content) if last_human else ""
+        referenced_image = select_referenced_image(
+            text, state.get("retrieved_image_paths") or []
+        )
+
     messages = _inject_images_into_last_human(
         [system, *state["messages"]],
         user_image=state.get("image_path"),
-        rag_images=[],
+        rag_images=[referenced_image] if referenced_image else [],
     )
 
     response = get_chat_model().invoke(messages)
 
-    # Si el usuario adjuntó una imagen, queda "en contexto" para turnos
+    # La imagen subida o referenciada queda "en contexto" para turnos
     # siguientes (p.ej. para pedir detección de objetos sobre ella).
-    retrieved_images = [state["image_path"]] if state.get("image_path") else []
+    if state.get("image_path"):
+        retrieved_images = [state["image_path"]]
+    elif referenced_image:
+        retrieved_images = [referenced_image]
+    else:
+        retrieved_images = []
     return {"messages": [response], "retrieved_image_paths": retrieved_images}
