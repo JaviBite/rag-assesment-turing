@@ -1,5 +1,7 @@
 # Chatbot RAG multimodal + servicio de detección de objetos
 
+> 📄 [Enunciado de la prueba](STATEMENT.md) · 📝 [Respuestas teóricas (Apartado 2 y extra del Apartado 3)](ANSWERS.md)
+
 Prueba técnica. Solución **dockerizada** con 4 contenedores:
 Se ha decidido utilizar 4 contenedores por simular un entorno real con diferentes servicios.
 
