@@ -40,21 +40,6 @@ async def set_starters() -> list[cl.Starter]:
         ),
     ]
 
-
-# @cl.on_chat_start
-# async def on_chat_start() -> None:
-#     # Un thread_id por sesión -> el checkpointer mantiene la memoria.
-#     cl.user_session.set("thread_id", str(uuid.uuid4()))
-#     await cl.Message(
-#         content=(
-#             "¡Hola! Soy tu asistente RAG. Puedes:\n"
-#             "- Preguntarme sobre los documentos indexados 📄\n"
-#             "- Subir una imagen para detectar personas y coches 🔍\n"
-#             "- Pedirme cálculos o código Python 🐍"
-#         )
-#     ).send()
-
-
 def _save_uploaded_image(message: cl.Message) -> str | None:
     """Guarda la primera imagen adjunta en data/images/ y devuelve la ruta."""
     for element in message.elements or []:
@@ -78,7 +63,13 @@ def _save_uploaded_image(message: cl.Message) -> str | None:
 
 @cl.on_message
 async def on_message(message: cl.Message) -> None:
+    # thread_id por sesión, generado al vuelo en el primer mensaje (no en
+    # on_chat_start, que ocultaría los Starters).
     thread_id = cl.user_session.get("thread_id")
+    if thread_id is None:
+        thread_id = str(uuid.uuid4())
+        cl.user_session.set("thread_id", thread_id)
+
     image_path = _save_uploaded_image(message)
 
     if image_path is None and message.content.strip() == DETECTION_STARTER_MESSAGE:
