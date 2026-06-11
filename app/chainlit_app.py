@@ -31,8 +31,8 @@ async def set_starters() -> list[cl.Starter]:
             message="¿Cuánta población hay actualmente en diferentes países?",
         ),
         cl.Starter(
-            label="🖼️ RAG con imágenes: escudo",
-            message="Busca en tu base de conocimiento un escudo de armas",
+            label="🖼️ RAG con imágenes: planetas",
+            message="Busca en tu base de conocimiento imagenes de la luna o planetas",
         ),
         cl.Starter(
             label="🔍 Detección de objetos",
