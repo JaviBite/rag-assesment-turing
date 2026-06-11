@@ -129,10 +129,15 @@ ingest-reset:
 DETECTOR_URL ?= http://localhost:8002
 VLLM_URL     ?= http://localhost:8000
 
-test-detector:
+url-detector:
 	@echo "=== Test: servicio de detección de objetos ==="
 	@echo "--- curl de ejemplo (README) ---"
 	curl -F "file=@image.jpg" $(DETECTOR_URL)/detect
+
+test-detector:
+	@echo "=== Test: servicio de detección de objetos ==="
+	@echo "--- curl de ejemplo (README) ---"
+	docker compose run --rm app python /srv/app/tests/test_detector.py
 
 test-rag:
 	@echo "=== Test: flujo RAG (via LangGraph directo) ==="
