@@ -32,7 +32,7 @@ class FormExtraction(BaseModel):
     fecha_nacimiento: str | None = Field(default=None, description="Valor del campo 'fecha de nacimiento', o null si vacío")
     fecha: str | None = Field(default=None, description="Valor del campo 'fecha', o null si vacío")
     lugar: str | None = Field(default=None, description="Valor del campo 'lugar', o null si vacío")
-    dni: str | None = Field(default=None, description="Valor del campo 'DNI' o 'NIF', o null si vacío")                                  
+    dni: str | None = Field(default=None, description="Valor del campo 'DNI' o 'NIF', o null si vacío")
     extra: list[FormField] = Field(description="Lista de campos extra relevantes detectados con su valor")
 
 

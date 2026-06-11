@@ -40,6 +40,7 @@ async def set_starters() -> list[cl.Starter]:
         ),
     ]
 
+
 def _save_uploaded_image(message: cl.Message) -> str | None:
     """Guarda la primera imagen adjunta en data/images/ y devuelve la ruta."""
     for element in message.elements or []:

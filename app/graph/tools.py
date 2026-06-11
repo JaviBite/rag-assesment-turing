@@ -34,7 +34,6 @@ def _draw_detections(image_path: Path, detections: list[dict]) -> Path | None:
         x1, y1, x2, y2 = det["box"]
         color = BOX_COLORS.get(label, (255, 200, 0))
 
-        # Caja
         draw.rectangle([x1, y1, x2, y2], outline=color, width=BOX_WIDTH)
 
         # Etiqueta con fondo de color para legibilidad

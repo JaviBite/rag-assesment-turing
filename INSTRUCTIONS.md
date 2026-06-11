@@ -108,8 +108,6 @@ arrancados (Docker o local) y NO mockean APIs externas:
   completo dentro del contenedor `app` (`docker compose run --rm app python
   /srv/app/tests/test_*.py`).
 - `make test-all` — los cuatro en secuencia.
-- `tests/conftest.py` define `DETECTOR_URL`/`VLLM_URL` (override por env) y
-  helper `make_blank_image()`.
 
 ## Convenciones de código
 

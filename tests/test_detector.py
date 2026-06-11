@@ -18,7 +18,7 @@ from pathlib import Path
 
 # Pillow puede no estar en el host; si no está, generamos los bytes a mano.
 try:
-    from PIL import Image, ImageDraw
+    from PIL import Image
 
     HAS_PIL = True
 except ImportError:
