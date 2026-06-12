@@ -69,8 +69,7 @@ detector/
 tests/                # tests de integración contra servicios EN MARCHA (no mocks)
 docs/                 # PDFs a ingestar (gitignored, no versionar)
 data/                 # generado: images/, extractions/, checkpoints.sqlite* (mayormente gitignored)
-docker-compose.yml        # stack completo (requiere GPU NVIDIA para vllm)
-docker-compose.mac.yml     # sin contenedor vllm; usa Ollama nativo del host (Mac/Metal)
+docker-compose.yml   # stack completo (requiere GPU NVIDIA para vllm)
 Makefile             # atajos: build/up/down/logs, ingest, tests, modo local sin Docker
 ```
 
@@ -78,8 +77,6 @@ Makefile             # atajos: build/up/down/logs, ingest, tests, modo local sin
 
 - **Docker completo** (requiere GPU NVIDIA + WSL2/NVIDIA Container Toolkit):
   `make build`, `make up`, `make status`, `make logs` / `make logs-vllm`.
-- **Mac con Ollama nativo** (sin contenedor vLLM, usa Metal): `make up-mac`
-  (requiere `ollama serve` + `ollama pull $OLLAMA_MODEL`, por defecto `gemma4:e2b`).
 - **Local sin Docker**: `.venv` con `app/requirements.txt` instalado, luego
   `make chroma-local` + `make start-local` (Chainlit en `:8501`). Las llamadas
   a vLLM/detector fallan con gracia si no están disponibles en localhost.

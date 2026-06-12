@@ -8,8 +8,6 @@ SHELL := bash
 .PHONY: help build up down logs ingest ingest-reset \
         test-detector test-rag test-python test-memory test-all eval eval-local \
         status clean \
-        check-ollama up-mac down-mac logs-mac status-mac \
-        ingest-mac ingest-reset-mac clean-mac \
         chroma-local start-local ingest-local ingest-local-reset stop-local
 
 help:
@@ -23,16 +21,6 @@ help:
 	@echo ""
 	@echo "  ingest             Ingesta los PDFs de docs/ (incremental)"
 	@echo "  ingest-reset       Vacía la colección y reingesta"
-	@echo ""
-	@echo "  Mac con Ollama nativo (Metal, ver docker-compose.mac.yml):"
-	@echo "  up-mac             Arranca chroma+detector+app usando el Ollama del host"
-	@echo "  down-mac           Para y elimina los contenedores"
-	@echo "  logs-mac           Sigue los logs"
-	@echo "  status-mac         Estado + healthchecks"
-	@echo "  ingest-mac         Ingesta los PDFs de docs/"
-	@echo "  ingest-reset-mac   Vacía la colección y reingesta"
-	@echo "  clean-mac          Elimina contenedores y volúmenes (chroma, hf-cache)"
-	@echo "  Requiere: 'ollama serve' (o la app Ollama) + 'ollama pull \$$OLLAMA_MODEL' (def. gemma3:4b)"
 	@echo ""
 	@echo "  test-detector      Prueba el servicio YOLO con una imagen de muestra"
 	@echo "  test-rag           Prueba una consulta RAG al chatbot"
@@ -72,50 +60,6 @@ logs-vllm:
 
 status:
 	docker compose ps
-
-# ─── Mac con Ollama nativo (Metal) ──────────────────────────────────────────
-#
-# Usa docker-compose.mac.yml: chroma + detector + app, SIN contenedor de LLM.
-# El LLM (Gemma multimodal + tool-calling) lo sirve Ollama instalado en el
-# host, que usa Metal/GPU de Apple Silicon -> mucho más rápido describiendo
-# imágenes que el Ollama dockerizado en CPU.
-#
-# Antes de usar estos targets:
-#   ollama serve                        (o abre la app Ollama)
-#   ollama pull $(OLLAMA_MODEL)         (por defecto gemma3:4b)
-
-export OLLAMA_MODEL ?= gemma4:e2b
-COMPOSE_MAC := -f docker-compose.mac.yml
-
-check-ollama:
-	@curl -sf http://localhost:11434/api/tags > /dev/null || { \
-	  echo "‼️  Ollama no responde en localhost:11434."; \
-	  echo "    Arráncalo con 'ollama serve' (o la app Ollama) y ejecuta 'ollama pull $(OLLAMA_MODEL)'."; \
-	  exit 1; \
-	}
-
-up-mac: check-ollama
-	docker compose $(COMPOSE_MAC) up -d --build
-	docker compose $(COMPOSE_MAC) ps
-
-down-mac:
-	docker compose $(COMPOSE_MAC) down
-
-logs-mac:
-	docker compose $(COMPOSE_MAC) logs -f
-
-status-mac:
-	docker compose $(COMPOSE_MAC) ps
-
-ingest-mac: check-ollama
-	docker compose $(COMPOSE_MAC) run --rm app python -m app.ingest
-
-ingest-reset-mac: check-ollama
-	docker compose $(COMPOSE_MAC) run --rm app python -m app.ingest --reset
-
-clean-mac:
-	docker compose $(COMPOSE_MAC) down -v --remove-orphans
-	@echo "Volúmenes eliminados (chroma-data, hf-cache)."
 
 # ─── Ingesta ─────────────────────────────────────────────────────────────────
 
@@ -170,7 +114,7 @@ eval:
 #   - Detector YOLO en LOCAL_DETECTOR  (para el tool detect_objects)
 #
 # Sobreescribibles en línea:
-#   make start-local LOCAL_VLLM_URL=http://localhost:11434/v1 LOCAL_VLLM_MODEL=gemma3
+#   make start-local LOCAL_VLLM_URL=http://localhost:11434/v1 LOCAL_VLLM_MODEL=gemma4:e2b
 
 LOCAL_VLLM_URL    ?= http://localhost:8000/v1
 LOCAL_VLLM_MODEL  ?= gemma
